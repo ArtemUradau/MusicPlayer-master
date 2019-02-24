@@ -10,6 +10,7 @@ namespace MusicPlayer
     {
         public int Duration;
         public string Name;
+        public string Path;
         public Artist Artist;
         public Album Album;
     }
