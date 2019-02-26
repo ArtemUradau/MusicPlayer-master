@@ -11,30 +11,46 @@ namespace MusicPlayer
         static void Main(string[] args)
         {
             var player = new Player();
-  //          player.Volume = 20;
-            player.Songs = GetSongsData();
+            player.Load("d://wavs//");
 
-//            TraceInfo(player);
+            player.SongStarted += ShowInfo;
+            player.SongsListChanged += ShowInfo;
 
             player.Play();
             player.VolumeUp();
+
             Console.WriteLine(player.Volume);
 
-            player.VolumeChange(-300);
-            Console.WriteLine(player.Volume);
-
-            player.VolumeChange(300);
-            Console.WriteLine(player.Volume);
-
-            /*player.Volume = -25;
-            Console.WriteLine(player.Volume);
-            */
-            player.Stop();
+            player.Play();
+            player.Unlock();
 
             Console.ReadLine();
         }
 
-        public static Song[] GetSongsData()
+        private static void ShowInfo(List<Song> songs, Song playingSong, bool locked, int volume)
+        {
+            Console.Clear();
+
+            foreach (var song in songs)
+            {
+                if (playingSong == song)
+                {
+                    Console.ForegroundColor = ConsoleColor.DarkRed;
+                    Console.WriteLine(song.Name);
+                    Console.ResetColor();
+                }
+                else
+                {
+                    Console.WriteLine(song.Name);
+                }
+            }
+
+            Console.ForegroundColor = ConsoleColor.DarkGreen;
+            Console.WriteLine($"Volume is: {volume}. Locked: {locked}");
+            Console.ResetColor();
+        }
+
+        /*public static Song[] GetSongsData()
         {
             var artist = new Artist();
             artist.Name = "Powerwolf";
@@ -61,14 +77,6 @@ namespace MusicPlayer
             };
 
             return new Song[] {song};
-        }
-
-        public static void TraceInfo(Player player)
-        {
-            Console.WriteLine(player.Songs[0].Artist.Name);
-            Console.WriteLine(player.Songs[0].Duration);
-            Console.WriteLine(player.Songs.Length);
-            Console.WriteLine(player.Volume);
-        }
+        }*/
     }
 }
