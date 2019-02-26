@@ -10,20 +10,21 @@ namespace MusicPlayer
     {
         static void Main(string[] args)
         {
-            var player = new Player();
-            player.Load("d://wavs//");
+            using (Player player = new Player())
+            {
+                player.Load("d://wavs");
 
-            player.SongStarted += ShowInfo;
-            player.SongsListChanged += ShowInfo;
+                player.SongStarted += ShowInfo;
+                player.SongsListChanged += ShowInfo;
 
-            player.Play();
-            player.VolumeUp();
+                player.Play();
+                player.VolumeUp();
 
-            Console.WriteLine(player.Volume);
+                Console.WriteLine(player.Volume);
 
-            player.Play();
-            player.Unlock();
-
+                player.Play();
+                player.Unlock();
+            }
             Console.ReadLine();
         }
 

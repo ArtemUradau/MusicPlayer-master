@@ -7,8 +7,10 @@ using System.IO;
 
 namespace MusicPlayer
 {
-    public class Player
+    public class Player:IDisposable
     {
+        private bool _disposed = false;
+
         const int MIN_VOLUME = 0;
         const int MAX_VOLUME = 100;
 
@@ -24,6 +26,7 @@ namespace MusicPlayer
         public event Action<List<Song>, Song, bool, int> SongsListChanged;
         public event Action<List<Song>, Song, bool, int> VolumeChanged;
         public event Action<List<Song>, Song, bool, int> PlayerLocked;
+
         public int Volume
         {
             get
@@ -143,16 +146,44 @@ namespace MusicPlayer
                 var files = dirInfo.GetFiles();
                 foreach (var file in files)
                 {
-                    var song = new Song
+                    if (file.FullName.EndsWith(".wav"))
                     {
-                        Path= file.FullName,
-                        Name = file.Name
-                    };
-
-                    Songs.Add(song);
+                        Song song = new Song();
+                        song.Path = file.FullName;
+                        song.Name = file.Name;
+                        Songs.Add(song);
+                    }
                 }
             }
             SongsListChanged?.Invoke(Songs, PlayingSong, _locked, _volume);
+        }
+        public void Dispose()
+        {
+            CleanUp(true);
+            GC.SuppressFinalize(this);
+        }
+        protected virtual void CleanUp(bool clean)
+        {
+            if (!this._disposed)
+            {
+                if (clean)
+                {
+                    {
+                        if (Songs != null)
+                        {
+                            Songs.Clear();
+                            Songs = null;
+                        }
+                        if (PlayingSong != null) PlayingSong = null;
+                    }
+                }
+                //очистка неуправляемых ресурсов
+            }
+            this._disposed = true;
+        }
+        ~Player()
+        {
+            CleanUp(false);
         }
     }
 }
