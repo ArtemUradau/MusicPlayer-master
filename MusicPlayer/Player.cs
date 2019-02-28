@@ -7,7 +7,7 @@ using System.IO;
 
 namespace MusicPlayer
 {
-    public class Player:IDisposable
+    public class Player : IDisposable
     {
         private bool _disposed = false;
 
@@ -20,6 +20,7 @@ namespace MusicPlayer
 
         public List<Song> Songs { get; set; } = new List<Song>();
         public Song PlayingSong { get; private set; }
+        System.Media.SoundPlayer player = new System.Media.SoundPlayer();
 
         public event Action<List<Song>, Song, bool, int> PlayerStarted;
         public event Action<List<Song>, Song, bool, int> SongStarted;
@@ -89,7 +90,7 @@ namespace MusicPlayer
         public void Lock()
         {
             _locked = true;
-            PlayerLocked?.Invoke(null, null, _locked,_volume);
+            PlayerLocked?.Invoke(null, null, _locked, _volume);
             Console.WriteLine("Player is locked");
         }
 
@@ -102,7 +103,7 @@ namespace MusicPlayer
 
         public bool Play()
         {
-            if (_locked == false&&Songs.Count>0)
+            if (_locked == false && Songs.Count > 0)
             {
                 _playing = true;
             }
@@ -115,11 +116,8 @@ namespace MusicPlayer
                 {
                     PlayingSong = song;
                     SongStarted?.Invoke(Songs, song, _locked, _volume);
-                    using (System.Media.SoundPlayer player = new System.Media.SoundPlayer())
-                    {
-                        player.SoundLocation = PlayingSong.Path;
-                        player.PlaySync();
-                    }
+                    player.SoundLocation = PlayingSong.Path;
+                    player.PlaySync();
                 }
             }
             _playing = false;
@@ -132,7 +130,7 @@ namespace MusicPlayer
             {
                 _playing = false;
             }
-            PlayerStarted?.Invoke(null,null, _playing, _volume);
+            PlayerStarted?.Invoke(null, null, _playing, _volume);
             Console.WriteLine("Player has been stopped");
             return _playing;
         }
@@ -168,21 +166,21 @@ namespace MusicPlayer
             {
                 if (clean)
                 {
+                    if (Songs != null)
                     {
-                        if (Songs != null)
-                        {
-                            Songs.Clear();
-                            Songs = null;
-                        }
-                        if (PlayingSong != null) PlayingSong = null;
+                        Songs.Clear();
+                        Songs = null;
                     }
+                    if (PlayingSong != null) PlayingSong = null;
+                    player.Dispose();
                 }
-                //очистка неуправляемых ресурсов
+                //очистка неупр ресурсов
             }
             this._disposed = true;
         }
         ~Player()
         {
+            Console.WriteLine("Finalize");
             CleanUp(false);
         }
     }
