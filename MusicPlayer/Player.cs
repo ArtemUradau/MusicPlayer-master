@@ -172,9 +172,8 @@ namespace MusicPlayer
                         Songs = null;
                     }
                     if (PlayingSong != null) PlayingSong = null;
-                    player.Dispose();
                 }
-                //очистка неупр ресурсов
+                player.Dispose();
             }
             this._disposed = true;
         }
