@@ -22,11 +22,18 @@ namespace MusicPlayer
         public Song PlayingSong { get; private set; }
         System.Media.SoundPlayer player = new System.Media.SoundPlayer();
 
+        public event Action<string> OnError;
+
         public event Action<List<Song>, Song, bool, int> PlayerStarted;
         public event Action<List<Song>, Song, bool, int> SongStarted;
         public event Action<List<Song>, Song, bool, int> SongsListChanged;
         public event Action<List<Song>, Song, bool, int> VolumeChanged;
         public event Action<List<Song>, Song, bool, int> PlayerLocked;
+
+        public Player()
+        {
+            OnError += (string ErrMsg) => Console.WriteLine(ErrMsg);
+        }
 
         public int Volume
         {
@@ -103,6 +110,7 @@ namespace MusicPlayer
 
         public bool Play()
         {
+
             if (_locked == false && Songs.Count > 0)
             {
                 _playing = true;
@@ -114,10 +122,21 @@ namespace MusicPlayer
             {
                 foreach (var song in Songs)
                 {
-                    PlayingSong = song;
-                    SongStarted?.Invoke(Songs, song, _locked, _volume);
-                    player.SoundLocation = PlayingSong.Path;
-                    player.PlaySync();
+                    try
+                    {
+                        PlayingSong = song;
+                        SongStarted?.Invoke(Songs, song, _locked, _volume);
+                        player.SoundLocation = PlayingSong.Path;
+                        player.PlaySync();
+                    }
+                    catch (FileNotFoundException exc)
+                    {
+                        OnError(exc.Message);
+                    }
+                    catch (InvalidOperationException exc)
+                    {
+                        OnError(exc.Message);
+                    }
                 }
             }
             _playing = false;
