@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
+using System.Threading;
 
 namespace MusicPlayer
 {
@@ -10,22 +10,23 @@ namespace MusicPlayer
     {
         static void Main(string[] args)
         {
+
             using (Player player = new Player())
             {
                 player.Load("d://wavs");
 
                 player.SongStarted += ShowInfo;
                 player.SongsListChanged += ShowInfo;
-
-                player.Play();
                 player.VolumeUp();
-
                 Console.WriteLine(player.Volume);
-
                 player.Play();
                 player.Unlock();
+                while(true)
+                {
+                    PlayerCommand.buffer = Console.ReadLine();
+                    PlayerCommand.ToCommand(player);
+                }
             }
-            Console.ReadLine();
         }
 
         private static void ShowInfo(List<Song> songs, Song playingSong, bool locked, int volume)
@@ -49,35 +50,22 @@ namespace MusicPlayer
             Console.ForegroundColor = ConsoleColor.DarkGreen;
             Console.WriteLine($"Volume is: {volume}. Locked: {locked}");
             Console.ResetColor();
-        }
-
-        /*public static Song[] GetSongsData()
+        }        
+    }
+    static class PlayerCommand
+    {
+        static public string buffer;
+        static public void ToCommand(Player player)
         {
-            var artist = new Artist();
-            artist.Name = "Powerwolf";
-            artist.Genre = "Metal";
-
-            var artist2 = new Artist("Lordi");
-            Console.WriteLine(artist2.Name);
-            Console.WriteLine(artist2.Genre);
-
-            var artist3 = new Artist("Sabaton", "Rock");
-            Console.WriteLine(artist3.Name);
-            Console.WriteLine(artist3.Genre);
-
-            var album = new Album();
-            album.Name = "New Album";
-            album.Year = 2018;
-
-            var song = new Song()
+            Console.WriteLine("*@"+buffer+"*@");
+            if (buffer == "Stop") player.Playing = false;
+            else if (buffer == "Start") player.Playing = true;
+            else if (buffer == "LoadPlaylist")
             {
-                Duration = 100,
-                Name = "New song",
-                Album = album,
-                Artist = artist
-            };
-
-            return new Song[] {song};
-        }*/
+                Console.WriteLine("Select Folder:");
+                player.Load(Console.ReadLine());
+            }
+            else Console.WriteLine("Unknown command \nTheCommand are \"Start\", \"Stop\" and \"LoadPlaylist\" ");
+        }
     }
 }

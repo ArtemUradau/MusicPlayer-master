@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.IO;
 
@@ -13,27 +14,48 @@ namespace MusicPlayer
 
         const int MIN_VOLUME = 0;
         const int MAX_VOLUME = 100;
-
+        private int index = 0;
         private int _volume;
-        private bool _locked;
-        private bool _playing;
+        private bool _locked = false;
+        private bool _playing = false;        
+        public bool Playing
+        {
+            get
+            {
+                return _playing;
+            }
+            set
+            {
+                if (value == true)
+                {
+                    if (PlayingSong != null)
+                    {
+                        player.SoundLocation = PlayingSong.Path;
+                        _playing = value;
+                        Console.WriteLine(Playing);
+                        Play();                        
+                    }
+                    
+                }
+                if (value == false)
+                {
+                    player.Stop();
+                    _playing = value;
+                    Console.WriteLine(Playing);
+                }
+            }
+        }
+        //static public Thread AsyncPlayer;
 
         public List<Song> Songs { get; set; } = new List<Song>();
         public Song PlayingSong { get; private set; }
         System.Media.SoundPlayer player = new System.Media.SoundPlayer();
-
-        public event Action<string> OnError;
 
         public event Action<List<Song>, Song, bool, int> PlayerStarted;
         public event Action<List<Song>, Song, bool, int> SongStarted;
         public event Action<List<Song>, Song, bool, int> SongsListChanged;
         public event Action<List<Song>, Song, bool, int> VolumeChanged;
         public event Action<List<Song>, Song, bool, int> PlayerLocked;
-
-        public Player()
-        {
-            OnError += (string ErrMsg) => Console.WriteLine(ErrMsg);
-        }
 
         public int Volume
         {
@@ -59,10 +81,7 @@ namespace MusicPlayer
             }
         }
 
-        public bool Playing
-        {
-            get { return _playing; }
-        }
+        
 
         public void VolumeUp()
         {
@@ -108,39 +127,32 @@ namespace MusicPlayer
             Console.WriteLine("Player is unlocked");
         }
 
-        public bool Play()
+        public async void Play()
         {
-
             if (_locked == false && Songs.Count > 0)
             {
                 _playing = true;
             }
             PlayerStarted?.Invoke(null, null, _playing, _volume);
             Console.WriteLine("Player has been started");
+            await Task.Run(() => AsyncPlaying());
 
+            _playing = false;
+        }
+        private void AsyncPlaying()
+        {
             if (_playing)
             {
-                foreach (var song in Songs)
-                {
-                    try
-                    {
-                        PlayingSong = song;
-                        SongStarted?.Invoke(Songs, song, _locked, _volume);
-                        player.SoundLocation = PlayingSong.Path;
-                        player.PlaySync();
-                    }
-                    catch (FileNotFoundException exc)
-                    {
-                        OnError(exc.Message);
-                    }
-                    catch (InvalidOperationException exc)
-                    {
-                        OnError(exc.Message);
-                    }
+                for(int i = index; i < Songs.Count && _playing; i++)
+                { 
+                    Song song = Songs[i];
+                    PlayingSong = song;
+                    SongStarted?.Invoke(Songs, song, _locked, _volume);
+                    player.SoundLocation = song.Path;
+                    if (_playing) player.PlaySync();
+                    index = i;
                 }
             }
-            _playing = false;
-            return _playing;
         }
 
         public bool Stop()
